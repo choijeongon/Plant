@@ -1,0 +1,275 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart' as nevi;
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+import 'package:plant_app/constants.dart';
+import 'package:plant_app/home/home.dart';
+import 'package:plant_app/network/network.dart';
+import 'package:dio/dio.dart';
+
+
+
+class ManageDetailBody extends StatefulWidget {
+  @override
+  _ManageDetailBodyState createState() => _ManageDetailBodyState();
+}
+
+class _ManageDetailBodyState extends State<ManageDetailBody> {
+  final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  var isChecked = true;
+  List<Plant> selectPlant = [];
+  File _image;
+  final picker = ImagePicker();
+  Plant plant = nevi.Get.arguments;
+
+  @override
+  Widget build(BuildContext context) {
+    var lastDateWater = parseLastDateWater(plant.lastDateWater);
+    String url = ServerUrl.url + plant.plantName.toString() + ".jpg";
+
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        children: <Widget>[
+          Center(
+            child: CircleAvatar(
+              radius: 100.0,
+              backgroundImage: NetworkImage(url),
+              backgroundColor: Colors.transparent,
+              child: GestureDetector(onTap: () {
+                showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('식물 사진 변경'),
+                        content: SingleChildScrollView(
+                          child: ListBody(
+                            children: <Widget>[Text('식물 사진을 변경하시겠습니까?')],
+                          ),
+                        ),
+                        actions: <Widget>[
+                          FlatButton(
+                            child: Text('확인'),
+                            onPressed: () async {
+                              Navigator.of(context).pop();                          
+                              await getImage(ImageSource.gallery);
+                              if (_image != null) {
+                                FormData formData = FormData.fromMap({
+                                  "file": await MultipartFile.fromFile(
+                                      _image.path,
+                                      filename: plant.plantName)
+                                });
+                                await changePlantPicture(formData);
+                              }
+                            },
+                          ),
+                          FlatButton(
+                            child: Text('취소'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    });
+              }),
+            ),
+          ),
+          SizedBox(height: 30),
+          Row(
+            children: <Widget>[
+              Text("마지막 물 준 날짜: " + lastDateWater.toString().substring(0, 10),
+                  style: TextStyle(fontSize: 23)),
+            ],
+          ),
+          SizedBox(height: 20),
+          Row(
+            children: <Widget>[
+              Text("물 주는 주기: " + plant.waterCycle.toString() + " 일",
+                  style: TextStyle(fontSize: 23)),
+            ],
+          ),
+          SizedBox(height: 20),
+          Row(
+            children: <Widget>[
+              Text("현재 날짜: " + dateStr, style: TextStyle(fontSize: 23)),
+            ],
+          ),
+          SizedBox(height: 20),
+          Row(
+            children: <Widget>[
+              Text(
+                  "물 주는 예정 날짜: " +
+                      lastDateWater
+                          .add(new Duration(days: plant.waterCycle))
+                          .toString()
+                          .substring(0, 10),
+                  style: TextStyle(fontSize: 23)),
+            ],
+          ),
+          SizedBox(height: 20),
+          Row(
+            children: <Widget>[
+              Container(
+                child: Text(
+                  "남은 날짜: " +
+                      lastDateWater
+                          .add(new Duration(days: plant.waterCycle))
+                          .difference(DateTime.now())
+                          .inDays
+                          .toString() +
+                      " 일",
+                  style: TextStyle(fontSize: 23),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+          Row(
+            children: [
+              Text("예정 날짜 알림", style: TextStyle(fontSize: 23)),
+              Switch(
+                  value: isChecked,
+                  onChanged: (value) {
+                    setState(() {
+                      isChecked = value;
+                    });
+                  })
+            ],
+          ),
+          SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              RaisedButton(
+                textColor: Colors.white,
+                padding: EdgeInsets.all(0.0),
+                shape: StadiumBorder(),
+                onPressed: () {
+                  showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text('물 주기 확인'),
+                          content: SingleChildScrollView(
+                            child: ListBody(
+                              children: <Widget>[Text('정말 지금 물을 주시겠습니까?')],
+                            ),
+                          ),
+                          actions: <Widget>[
+                            FlatButton(
+                              child: Text('확인'),
+                              onPressed: () async {
+                                await updatePlant(
+                                    plant.plantName, DateTime.now());
+                                Navigator.of(context).pop();
+                                String plantObj =
+                                    await getPlant(plant.plantName);
+                                setState(() {
+                                  selectPlant = parseJsonToPlants(plantObj);
+                                  plant = selectPlant[0];
+                                });
+                              },
+                            ),
+                            FlatButton(
+                              child: Text('취소'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(25.0),
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFF0D47A1),
+                        Color(0xFF1976D2),
+                        Color(0xFF42A5F5),
+                      ],
+                    ),
+                  ),
+                  child: Text('물  주기'),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 50.0, vertical: 15.0),
+                ),
+              ),
+              RaisedButton(
+                textColor: Colors.white,
+                padding: EdgeInsets.all(0.0),
+                shape: StadiumBorder(),
+                onPressed: () {
+                  showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text('삭제 확인'),
+                          content: SingleChildScrollView(
+                            child: ListBody(
+                              children: <Widget>[Text('정말 식물을 삭제하시겠습니까?')],
+                            ),
+                          ),
+                          actions: <Widget>[
+                            FlatButton(
+                              child: Text('확인'),
+                              onPressed: () async {
+                                await deletePlant(plant.plantName);
+                                Navigator.of(context).pop();
+                                nevi.Get.offAll(() => Home());
+                              },
+                            ),
+                            FlatButton(
+                              child: Text('취소'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(25.0),
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xffee0000),
+                        const Color(0xffeee000)
+                      ],
+                    ),
+                  ),
+                  child: Text('식물삭제'),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 50.0, vertical: 15.0),
+                ),
+              ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Future<void> getImage(ImageSource source) async {
+    final pickedFile = await picker.getImage(source: source);
+
+    setState(() {
+      if (pickedFile != null) {
+        _image = File(pickedFile.path);
+      } else {
+        print('No image selected.');
+      }
+    });
+  }
+}
+
+DateTime parseLastDateWater(String lastDateWater) {
+  return DateTime.parse(lastDateWater);
+}
