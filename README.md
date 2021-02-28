@@ -9,12 +9,16 @@
 ** 현재 구현 된 기능 : plant CRUD
 
 ** 미구현 기능 : 식물 AI (사진으로 종류 알아 내기), 물주기 알림, 사물 인터넷(물주기) 등
+
 ---
+
 ## 1. 메인 화면
 * 등록 된 식물 사진을 표시, 해당 식물의 사진을 클릭하면 그 식물의 관리 페이지로 이동
 <img src="https://user-images.githubusercontent.com/79705809/109412546-f6cf7a80-79eb-11eb-90ee-744822c300b5.jpg"  width="324" height="720">
 
 * 카드 메뉴를 통해 식물 추가, 식물 관리 페이지로 이동
+
+---
 
 ## 2. 식물 추가 화면
 * 갤러리/카메라를 선택하여 이미지 추가 가능
@@ -35,6 +39,8 @@
 
 <img src="https://user-images.githubusercontent.com/79705809/109412818-80337c80-79ed-11eb-8c78-64620d4d70e0.jpg"  width="324" height="720">
 
+---
+
 ## 3. 식물 관리 화면(목록)
 * 등록된 식물의 리스트가 표시
 
@@ -54,4 +60,5 @@
 * '식물 삭제' 버튼을 통해 식물 삭제 가능
 
 <img src="https://user-images.githubusercontent.com/79705809/109412826-845f9a00-79ed-11eb-9bb4-1865817d2042.jpg"  width="324" height="720">
+
 
