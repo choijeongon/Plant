@@ -1,10 +1,11 @@
 # 살려줘 식물!
 # 가정용 식물 관리 앱
 ## 개발 환경
-* 서버 - Linux Ubuntu, Node.js(express)
+* 서버 - AWS(Linux Ubuntu/Node.js(express))
 * 클라이언트 - flutter, dart
 * 데이터베이스 - MySQL(본인 synology nas에서 작동)
-* 구조 - 3계층 구조(클라이언트 <-> Linux Ubuntu(Node js Server) <-> Synology Nas(MySQL))
+* 구조 - 3계층 구조(클라이언트 <-> AWS(Ubuntu Linux/Node js) <-> Synology Nas(MySQL))
+* 네트워크 - dio (Restful API)
 
 ** 현재 구현 된 기능 : plant CRUD
 
